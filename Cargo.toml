@@ -15,4 +15,4 @@ rustc-serialize = "0.3"
 rust-freqdist   = "0.1"
 
 [dev-dependencies]
-walkdir         = "0.1"
+walkdir         = "2.3"
