@@ -8,11 +8,25 @@ repository      = "https://github.com/ferristseng/rust-punkt"
 description     = "An implementation of a Punkt sentence tokenizer"
 readme          = "README.md"
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["console_error_panic_hook"]
+
 [dependencies]
+wasm-bindgen    = "0.2.83"
 num             = "0.4"
-phf             = { version = "0.7", features = ["macros"] }
+phf             = { version = "0.11", features = ["macros"] }
 rustc-serialize = "0.3"
 rust-freqdist   = "0.1"
+
+# The `console_error_panic_hook` crate provides better debugging of panics by
+# logging them with `console.error`. This is great for development, but requires
+# all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
+# code size when deploying.
+# The "optional" part is copy-pasted and I don't know why I need it
+console_error_panic_hook = { version = "0.1.7", optional = true }
 
 [dev-dependencies]
 walkdir         = "2.3"
