@@ -9,7 +9,7 @@ description     = "An implementation of a Punkt sentence tokenizer"
 readme          = "README.md"
 
 [dependencies]
-num             = "0.1"
+num             = "0.4"
 phf             = { version = "0.7", features = ["macros"] }
 rustc-serialize = "0.3"
 rust-freqdist   = "0.1"
