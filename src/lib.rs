@@ -144,7 +144,7 @@
 extern crate freqdist;
 extern crate num;
 extern crate phf;
-extern crate rustc_serialize;
+extern crate serde_json;
 #[cfg(test)]
 extern crate test;
 #[cfg(test)]

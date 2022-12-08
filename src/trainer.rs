@@ -10,12 +10,15 @@ use std::cmp::min;
 use std::collections::{HashMap, HashSet};
 use std::default::Default;
 use std::hash::{Hash, Hasher};
+// the compiler has started to reject this with E0658
+// TODO: figure out if this was important and how to fix
+// use std::intrinsics::prefetch_read_data;
 use std::marker::PhantomData;
 use std::ops::Deref;
 use std::str::FromStr;
 
 use freqdist::FrequencyDistribution;
-use rustc_serialize::json::Json;
+use serde_json::Value;
 
 use prelude::{
   DefinesNonPrefixCharacters, DefinesNonWordCharacters, OrthographicContext, OrthographyPosition,
@@ -211,67 +214,66 @@ impl FromStr for TrainingData {
 
   /// Deserializes JSON and loads the data into a new TrainingData object.
   fn from_str(s: &str) -> Result<TrainingData, &'static str> {
-    match Json::from_str(s) {
-      Ok(Json::Object(mut obj)) => {
-        let mut data: TrainingData = Default::default();
+    match serde_json::from_str(s) {
+      Ok(Value::Object(m)) => {
+        let mut td: TrainingData = Default::default();
 
-        // Macro that gets a Json array by a path on the object. Then does a
-        // pattern match on a specified pattern, and runs a specified action.
-        macro_rules! read_json_array_data(
-          ($path:expr, $mtch:pat, $act:expr) => (
-            match obj.remove($path) {
-              Some(Json::Array(arr)) => {
-                for x in arr.into_iter() {
-                  match x {
-                    $mtch => { $act; }
-                        _ => ()
-                  }
-                }
-              }
-              _ => return Err("failed to parse expected path")
-            }
-          );
-        );
+        match m.get("abbrev_types") {
+          Some(Value::Array(vs)) => {
+            vs.into_iter().for_each(|e| match e {
+              Value::String(s) => { td.insert_abbrev(&s[..]); }
+              _ => ()
+            })
+          }
+          _ => return Err("failed to parse abbrev_types")
+        }
 
-        read_json_array_data!(
-          "abbrev_types",
-          Json::String(st),
-          data.insert_abbrev(&st[..])
-        );
-
-        read_json_array_data!(
-          "sentence_starters",
-          Json::String(st),
-          data.insert_sentence_starter(&st[..])
-        );
+        match m.get("sentence_starters") {
+          Some(Value::Array(vs)) => {
+            vs.into_iter().for_each(|e| match e {
+              Value::String(s) => { td.insert_sentence_starter(&s[..]); }
+              _ => ()
+            })
+          }
+          _ => return Err("failed to parse sentence_starters")
+        }
 
         // Load collocations, these come as an array with 2 members in them (or they should).
         // Pop them in reverse order, then insert into the proper bucket.
-        read_json_array_data!("collocations", Json::Array(mut ar), {
-          match (ar.pop(), ar.pop()) {
-            (Some(Json::String(r)), Some(Json::String(l))) => data
-              .collocations
-              .entry(l)
-              .or_insert(HashSet::new())
-              .insert(r),
-            _ => return Err("failed to parse collocations section"),
-          };
-        });
-
-        match obj.remove("ortho_context") {
-          Some(Json::Object(obj)) => {
-            for (k, ctxt) in obj.into_iter() {
-              ctxt
-                .as_u64()
-                .map(|c| data.orthographic_context.insert(k, c as u8));
-            }
+        match m.get("collocations") {
+          Some(Value::Array(vs)) => {
+            vs.into_iter().for_each(|e| match e {
+              Value::Array(cs) => {
+                match (cs.get(1), cs.get(0)) {
+                  (Some(Value::String(r)), Some(Value::String(l))) => {
+                    td.collocations
+                        .entry(l.to_string())
+                        .or_insert(HashSet::new())
+                        .insert(r.to_string());
+                  }
+                  _ => ()
+                }
+              }
+              _ => ()
+            })
           }
-          _ => return Err("failed to parse orthographic context section"),
+          _ => return Err("failed to parse collocations")
         }
 
-        Ok(data)
+        match m.get("ortho_context") {
+          Some(Value::Object(obj)) => {
+            for (k, ctx) in obj.into_iter() {
+              ctx
+                  .as_u64()
+                  .map(|c| td.orthographic_context.insert(k.to_string(), c as u8));
+            }
+          }
+          _ => return Err("failed to parse otho_context")
+        }
+
+        return Ok(td);
       }
-      _ => Err("no json object found containing training data"),
+      _ => Err("no json object found containing training data")
     }
   }
 }
