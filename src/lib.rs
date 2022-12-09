@@ -175,30 +175,30 @@ pub mod params {
 /// Some fun with wasm
 #[wasm_bindgen]
 pub fn split(lang: &str, paragraphs: Array) -> Result<Array, String> {
-  let td: Option<TrainingData> = match lang {
-    "en" => Some(TrainingData::english()),
-    "fr" => Some(TrainingData::french()),
-    "es" => Some(TrainingData::spanish()),
-    "it" => Some(TrainingData::italian()),
-    _ => None
-  };
+  let td = match lang {
+    "en" => Ok(TrainingData::english()),
+    "fr" => Ok(TrainingData::french()),
+    "es" => Ok(TrainingData::spanish()),
+    "it" => Ok(TrainingData::italian()),
+    _    => Err(format!("no corresponding language found: {}", lang))
+  }?;
 
+
+  // TODO: can serde_wasm_bindgen be used to avoid this stupidity?
   for v in paragraphs.iter() {
     if !v.is_string() {
       return Err("provided non-string in paragraphs array".to_string());
     }
   }
 
+  // again, can serde be used to avoid this?
   let paragraphs_vec: Vec<String> = paragraphs.iter()
       .filter_map(|v| v.as_string())
       .collect();
 
-  return match td {
-    Some(..) => Ok(["here", "is", "an", "array"].iter()
-        .map(|x| JsValue::from_str(x))
-        .collect::<Array>()),
-    _ => Err(format!("no corresponding language found: {}", lang))
-  };
+  return Ok(["here", "is", "an", "array"].iter()
+      .map(|x| JsValue::from_str(x))
+      .collect::<Array>());
 }
 
 #[cfg(test)]
