@@ -150,6 +150,7 @@ extern crate test;
 #[cfg(test)]
 extern crate walkdir;
 extern crate wasm_bindgen;
+extern crate js_sys;
 
 mod trainer;
 mod util;
@@ -157,6 +158,8 @@ mod token;
 mod tokenizer;
 mod prelude;
 
+use js_sys::Array;
+use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::wasm_bindgen;
 pub use trainer::{Trainer, TrainingData};
 pub use tokenizer::{SentenceByteOffsetTokenizer, SentenceTokenizer};
@@ -171,7 +174,7 @@ pub mod params {
 
 /// Some fun with wasm
 #[wasm_bindgen]
-pub fn split(lang: &str, _paragraph: &str) -> String {
+pub fn split(lang: &str, paragraphs: Array) -> Result<Array, String> {
   let td: Option<TrainingData> = match lang {
     "en" => Some(TrainingData::english()),
     "fr" => Some(TrainingData::french()),
@@ -180,9 +183,21 @@ pub fn split(lang: &str, _paragraph: &str) -> String {
     _ => None
   };
 
+  for v in paragraphs.iter() {
+    if !v.is_string() {
+      return Err("provided non-string in paragraphs array".to_string());
+    }
+  }
+
+  let paragraphs_vec: Vec<String> = paragraphs.iter()
+      .filter_map(|v| v.as_string())
+      .collect();
+
   return match td {
-    Some(..) => format!("found language: {}", lang),
-    _ => format!("no corresponding language found: {}", lang)
+    Some(..) => Ok(["here", "is", "an", "array"].iter()
+        .map(|x| JsValue::from_str(x))
+        .collect::<Array>()),
+    _ => Err(format!("no corresponding language found: {}", lang))
   };
 }
 
