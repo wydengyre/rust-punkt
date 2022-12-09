@@ -173,6 +173,7 @@ pub mod params {
 }
 
 /// Some fun with wasm
+/// TODO: specify typescript type of paragraphs and result, or can serde help?
 #[wasm_bindgen]
 pub fn split(lang: &str, paragraphs: Array) -> Result<Array, String> {
   let td = match lang {
@@ -183,18 +184,8 @@ pub fn split(lang: &str, paragraphs: Array) -> Result<Array, String> {
     _    => Err(format!("no corresponding language found: {}", lang))
   }?;
 
-
-  // TODO: can serde_wasm_bindgen be used to avoid this stupidity?
-  for v in paragraphs.iter() {
-    if !v.is_string() {
-      return Err("provided non-string in paragraphs array".to_string());
-    }
-  }
-
-  // again, can serde be used to avoid this?
-  let paragraphs_vec: Vec<String> = paragraphs.iter()
-      .filter_map(|v| v.as_string())
-      .collect();
+  let paragraphs_vec: Vec<String> = serde_wasm_bindgen::from_value(JsValue::from(paragraphs))
+      .or(Err(format!("failed to deserialize paragraphs")))?;
 
   return Ok(["here", "is", "an", "array"].iter()
       .map(|x| JsValue::from_str(x))
