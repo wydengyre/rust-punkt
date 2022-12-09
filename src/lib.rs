@@ -149,6 +149,7 @@ extern crate serde_json;
 extern crate test;
 #[cfg(test)]
 extern crate walkdir;
+extern crate wasm_bindgen;
 
 mod trainer;
 mod util;
@@ -156,6 +157,7 @@ mod token;
 mod tokenizer;
 mod prelude;
 
+use wasm_bindgen::prelude::wasm_bindgen;
 pub use trainer::{Trainer, TrainingData};
 pub use tokenizer::{SentenceByteOffsetTokenizer, SentenceTokenizer};
 
@@ -165,6 +167,23 @@ pub mod params {
   pub use prelude::{DefinesInternalPunctuation, DefinesNonPrefixCharacters,
                     DefinesNonWordCharacters, DefinesPunctuation, DefinesSentenceEndings, Set,
                     Standard, TrainerParameters};
+}
+
+/// Some fun with wasm
+#[wasm_bindgen]
+pub fn split(lang: &str, _paragraph: &str) -> String {
+  let td: Option<TrainingData> = match lang {
+    "en" => Some(TrainingData::english()),
+    "fr" => Some(TrainingData::french()),
+    "es" => Some(TrainingData::spanish()),
+    "it" => Some(TrainingData::italian()),
+    _ => None
+  };
+
+  return match td {
+    Some(..) => format!("found language: {}", lang),
+    _ => format!("no corresponding language found: {}", lang)
+  };
 }
 
 #[cfg(test)]
