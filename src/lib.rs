@@ -161,6 +161,7 @@ mod prelude;
 use js_sys::Array;
 use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::wasm_bindgen;
+use params::Standard;
 pub use trainer::{Trainer, TrainingData};
 pub use tokenizer::{SentenceByteOffsetTokenizer, SentenceTokenizer};
 
@@ -187,9 +188,15 @@ pub fn split(lang: &str, paragraphs: Array) -> Result<Array, String> {
   let paragraphs_vec: Vec<String> = serde_wasm_bindgen::from_value(JsValue::from(paragraphs))
       .or(Err(format!("failed to deserialize paragraphs")))?;
 
-  return Ok(["here", "is", "an", "array"].iter()
-      .map(|x| JsValue::from_str(x))
-      .collect::<Array>());
+  let tokenized = paragraphs_vec
+      .iter()
+      .map(|par|
+          SentenceTokenizer::<Standard>::new(par, &td)
+              .map(JsValue::from_str)
+              .collect::<Array>())
+      .collect::<Array>();
+
+  return Ok(tokenized);
 }
 
 #[cfg(test)]
