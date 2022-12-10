@@ -173,8 +173,6 @@ pub mod params {
                     Standard, TrainerParameters};
 }
 
-/// Some fun with wasm
-/// TODO: specify typescript type of paragraphs and result, or can serde help?
 #[wasm_bindgen]
 pub fn split(lang: &str, paragraphs: Array) -> Result<Array, String> {
   let td = match lang {
