@@ -207,14 +207,10 @@ impl TrainingData {
   pub fn get_orthographic_context(&self, tok: &str) -> u8 {
     *self.orthographic_context.get(tok).unwrap_or(&0)
   }
-}
-
-impl FromStr for TrainingData {
-  type Err = &'static str;
 
   /// Deserializes JSON and loads the data into a new TrainingData object.
-  fn from_str(s: &str) -> Result<TrainingData, &'static str> {
-    match serde_json::from_str(s) {
+  pub fn from_slice(v: &[u8]) -> Result<TrainingData, &'static str> {
+    match serde_json::from_slice(v) {
       Ok(Value::Object(m)) => {
         let mut td: TrainingData = Default::default();
 
@@ -275,6 +271,15 @@ impl FromStr for TrainingData {
       }
       _ => Err("no json object found containing training data")
     }
+  }
+}
+
+impl FromStr for TrainingData {
+  type Err = &'static str;
+
+  /// Deserializes JSON and loads the data into a new TrainingData object.
+  fn from_str(s: &str) -> Result<TrainingData, &'static str> {
+    return TrainingData::from_slice(s.as_bytes());
   }
 }
 

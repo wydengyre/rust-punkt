@@ -173,15 +173,13 @@ pub mod params {
                     Standard, TrainerParameters};
 }
 
+/// use the punkt algorithm to split paragraphs into tokenized sentences
 #[wasm_bindgen]
-pub fn split(lang: &str, paragraphs: Array) -> Result<Array, String> {
-  let td = match lang {
-    "en" => Ok(TrainingData::english()),
-    "fr" => Ok(TrainingData::french()),
-    "es" => Ok(TrainingData::spanish()),
-    "it" => Ok(TrainingData::italian()),
-    _    => Err(format!("no corresponding language found: {}", lang))
-  }?;
+pub fn split(td_json: &[u8], paragraphs: Array) -> Result<Array, String> {
+  // consider more descriptive error message describing deserialization failure?
+  // TODO: write a test for above
+  let td = TrainingData::from_slice(td_json)
+      .or(Err("failed to deserialize training data"))?;
 
   let paragraphs_vec: Vec<String> = serde_wasm_bindgen::from_value(JsValue::from(paragraphs))
       .or(Err(format!("failed to deserialize paragraphs")))?;
