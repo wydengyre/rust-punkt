@@ -1,8 +1,7 @@
-# punkt
+# punkt: WASM edition
 
-[![Build Status](https://travis-ci.org/ferristseng/rust-punkt.svg)](https://travis-ci.org/ferristseng/rust-punkt)
-[![Crates.io](https://img.shields.io/crates/v/punkt.svg)](https://crates.io/crates/punkt)
-[![Docs.rs](https://docs.rs/punkt/badge.svg)](https://docs.rs/punkt/)
+This is a fork of http://ferristseng/rust-punkt with modifications to compile to WASM.
+The original README remains unmodified, below.
 
 ## Status
 
